@@ -25,7 +25,7 @@ while True:
     weather_condition = data["weather"][0]["main"]
     print(weather_condition)
     
-    # 날씨에 따라 NodeMCU에 명령 보내기
+    
     if weather_condition.lower() == 'clear':
         send_command_to_nodemcu('close')
         print("Closed")

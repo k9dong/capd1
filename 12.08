@@ -1,0 +1,41 @@
+import requests
+import json
+import time
+
+# OpenWeatherMap API 설정
+apikey = "8043ad19fc304c6deb2651297b9b1bdc"
+city = "Busan"
+lang = "kr"
+
+# 아두이노 wemos IP 주소
+node_mcu_ip = '192.168.0.5'
+
+last_command = None  # 이전에 보낸 명령을 저장하는 변수
+
+def send_command_to_nodemcu(command):
+    """NodeMCU로 HTTP GET 요청을 보내는 함수"""
+    global last_command
+    if command != last_command:
+        requests.get(f'http://{node_mcu_ip}/motor?state={command}')
+        print(f"Motor {command} due to new command")
+        last_command = command
+    else:
+        print(f"Command {command} skipped, same as last command")
+
+while True:
+    # 날씨 API 
+    api_url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={apikey}&lang={lang}&units=metric"
+    result = requests.get(api_url)
+    data = json.loads(result.text)
+
+    # 날씨 정보 
+    print(data["name"], "의 날씨입니다.")
+    weather_condition = data["weather"][0]["main"]
+    print(weather_condition)
+    
+    # 비가 오는 경우 'open', 그렇지 않은 경우 'close' 명령을 결정
+    current_command = 'open' if weather_condition.lower() == 'rain' else 'close'
+    send_command_to_nodemcu(current_command)
+    
+    # 2분마다 반복
+    time.sleep(120)
